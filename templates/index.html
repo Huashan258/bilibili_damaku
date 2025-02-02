@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>Bilibili Live Danmaku</title>
+    <script src="https://cdn.socket.io/4.1.3/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+        body {
+            font-family: 'Jost', var(--fontstack-sans-serif);
+            background-color: rgba(0, 0, 0, 0);
+            padding: 20px;
+            height: 100vh;
+            overflow-y: hidden;
+            margin: 0;
+        }
+        .message-container {
+            height: calc(100vh - 60px);
+            overflow-y: hidden;
+            overflow-x: hidden;
+            background-color: rgba(0, 0, 0, 0);;
+            padding: 10px;
+            border-radius: 5px;
+            padding-bottom: 24px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .timer-container {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0);;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Jost', var(--fontstack-sans-serif);
+            color: transparent;
+            background: linear-gradient(45deg, #0000ff, #006400);
+            -webkit-background-clip: text;
+            background-clip: text;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .message {
+            /*margin-bottom: 10px;
+            padding: 10px;
+            font-size: 55px; /* 修改弹幕消息字体大小 */
+            font-family: 'Jost', var(--fontstack-sans-serif); /* 修改弹幕消息字体 */
+            background-color: #213d2b; /* 消息背景颜色 */
+            border-radius: 5px;
+            position: relative; /* 相对定位，用于动画效果 */
+            animation: slideIn 0.5s ease; /* 入场动画 */*/
+            --margin-top: 2;
+            --margin-left: 28;
+            font-size: 25px;
+            position: relative;
+            display: block;
+            margin-top: calc(var(--1px) * var(--margin-top));
+            margin-left: calc(var(--1px) * var(--margin-left));
+            padding: calc(var(--1px) * 8) calc(var(--1px) * 14);
+            color: var(--text);
+            background-color: var(--bg);
+            width: fit-content;
+            min-width: 3em;
+            border-radius: calc(var(--1px) * 18);
+            filter: drop-shadow(0 0 1px currentColor);
+            font-weight: bold;
+        }
+        .message strong {
+            font-weight: bold;
+            background: linear-gradient(45deg, #001f6b, #00c6ff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .timestamp {
+            font-size: 14px;
+            color: #7acca5;
+            margin-left: 5px;
+        }
+        #spacer {
+            height: 14px; /* 空白区域的高度 */
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <div class="timer" id="timer">00:00:00.000</div>
+    </div>
+    <div class="message-container" id="danmaku-container"></div>
+    <div id="spacer"></div>
+    <script type="text/javascript">
+        var socket = io();
+        var displayedTimestamps = {}; // 记录显示过的时间戳
+        var startTime;
+
+        socket.on('connect', function() {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+        });
+
+        socket.on('danmaku', function(data) {
+            // 检查时间戳是否已显示过
+            if (!displayedTimestamps[data.time]) {
+                displayedTimestamps[data.time] = true;
+
+                var message = `<div class="message" style="display: flex; align-items: center; flex-wrap: wrap; margin-bottom: 2px; padding: 2px;">
+                    <img src="${data.avatar}" alt="avatar" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
+                    <div style="flex-grow: 1; display: flex; flex-wrap: wrap;">
+                        <strong style="background: linear-gradient(to right, #ff5e5e, #ffb85e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 25px; margin-right: 10px; white-space: nowrap;">${data.username}</strong>
+                        <span style="font-weight: bold; font-family: 'Arial Black', 'Arial Bold', Gadget, sans-serif; font-size: 25px; white-space: nowrap;">${data.text}</span>
+                    </div>
+                    <span class="timestamp" style="font-size: 14px; white-space: nowrap;">${data.time}</span>
+                </div>`;
+                $('#danmaku-container').append(message);
+                var newMessage = $('#danmaku-container .message').last().get(0);
+                newMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                var container = document.getElementById('danmaku-container');
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+
+        function initializeTimer() {
+            $.getJSON('/start-time', function(data) {
+                startTime = data.start_time * 1000; // 转换为毫秒
+
+                setInterval(function() {
+                    var now = new Date().getTime();
+                    var elapsedTime = now - startTime;
+
+                    var hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+                    var minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+                    var milliseconds = Math.floor(elapsedTime % 1000);
+
+                    hours = hours < 10 ? "0" + hours : hours;
+                    minutes = minutes < 10 ? "0" + minutes : minutes;
+                    seconds = seconds < 10 ? "0" + seconds : seconds;
+                    milliseconds = milliseconds < 100 ? "0" + milliseconds : milliseconds; // 保证毫秒部分为三位数
+
+                    document.getElementById('timer').innerText = hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+                }, 10);
+            });
+        }
+
+        initializeTimer();
+    </script>
+</body>
+</html>
