@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html>
+/* LAPLACE 气泡 × 明前奶绿 by LAPLACE Chat */
+/*
+  支持的自定义场景：
+    - [scene:blue] 适配明前奶绿夜的亡灵场景配色
+ */
+/* 引入 Google Fonts 字体，理论上国内可以直接访问 */
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+/* 全局背景透明，可保证 OBS 载入弹幕机的过程中背景全程透明 */
+body { background-color: rgba(0, 0, 0, 0); }
+
+/* 全局事件变量 */
+.event {
+  /* 应用全局自定义字体 */
+  /* --fontstack-sans-serif 为 LAPLACE Chat 内置变量，可调用非衬线字体 */
+  --event-font-family: 'Jost', var(--fontstack-sans-serif);
+}
+
+/* 弹幕自定义样式 */
+.event--message {
+  --text: #213d2b;
+  --bg: #f1fbf5;
+}
+
+/* 蓝色场景变量 */
+.scene-blue {
+  --event-username-text-0: #d0c5dd;
+  --event-danmaku-streamer-text: rgb(254, 220, 230);
+}
+
+.scene-blue .event--message {
+  --text: rgb(203, 183, 227);
+  --bg: rgba(203, 183, 227, 0.25);
+}
+
+/* 总督变量 */
+.event--message.guard-level--1 {
+  --text: rgb(61, 24, 23);
+  --bg: rgb(253, 213, 186);
+  --cross-deco: url(/assets/flower-symbol-1.svg);
+}
+
+.scene-blue .event--message.guard-level--1 {
+  --text: rgb(255, 168, 168);
+  --bg: rgba(255, 152, 161, 0.25);
+}
+
+/* 提督变量 */
+.event--message.guard-level--2 {
+  --text: rgb(74, 29, 95);
+  --bg: rgb(233, 204, 240);
+  --cross-deco: url(/assets/flower-symbol-2.svg);
+}
+
+.scene-blue .event--message.guard-level--2 {
+  --text: rgb(241, 185, 255);
+  --bg: rgba(255, 176, 244, 0.25);
+}
+
+/* 舰长变量 */
+.event--message.guard-level--3 {
+  --text: rgb(26, 24, 85);
+  --bg: rgb(200, 221, 252);
+  --cross-deco: url(/assets/flower-symbol-3.svg);
+}
+
+.scene-blue .event--message.guard-level--3 {
+  --text: rgb(182, 211, 255);
+  --bg: rgba(146, 190, 255, 0.25);
+}
+
+/* 主播变量 */
+.event--message.user-type--streamer {
+  --text: rgb(255, 255, 255);
+  --bg: rgb(65, 159, 120);
+}
+
+.scene-blue .event--message.user-type--streamer {
+  --text: rgb(50, 32, 72);
+  --bg: var(--event-danmaku-streamer-text);
+}
+
+/* 为事件增加一个全局的渐变，可在调用 OBS API 时增加颜色渐变效果，使场景切换时看上去没那么突兀 */
+.event {
+  transition: .4s color ease, .4s background-color ease;
+}
+
+/* 当主题为暗色时，为用户名增加一个阴影，以保证在大部分深色背景的游戏场景遇到白色背景时依然可以看清用户名 */
+.scheme-dark .event--system,
+.scheme-dark .event--superchat,
+.scheme-dark .event--user-block,
+.scheme-dark .event--live-cutoff,
+.scheme-dark .event--toast .content,
+.scheme-dark .event--gift .content,
+.scheme-dark .event--like-click .username,
+.scheme-dark .event--interaction .username,
+.scheme-dark .event--message .username {
+  text-shadow: 0 0 2px var(--bg-color), 0 0 2px var(--bg-color), 0 0 2px var(--bg-color);
+}
+
+.scene-blue .avatar-wrap::after {
+  --size: var(--avatar-size, var(--event-line-height));
+  --factor: 1.6;
+  /* 取消注释开启头像装饰 */
+  /* content: ''; */
+  display: block;
+  position: absolute;
+  top: calc((var(--size) * var(--factor) - var(--size)) / -2);
+  left: calc((var(--size) * var(--factor) - var(--size)) / -2);
+  z-index: 1;
+  width: calc(var(--size) * var(--factor));
+  height: calc(var(--size) * var(--factor));
+  background: var(--cross-deco);
+  background-size: contain;
+}
+
+/* 防止深色模式下礼物事件中的粉丝勋章出现阴影 */
+.fans-medal {
+  text-shadow: none;
+}
+
+/* 弹幕正文改为聊天泡泡样式 */
+.event--message .message {
+  --margin-top: 2;
+  --margin-left: 28;
+  position: relative;
+  display: block;
+  margin-top: calc(var(--1px) * var(--margin-top));
+  margin-left: calc(var(--1px) * var(--margin-left));
+  padding: calc(var(--1px) * 8) calc(var(--1px) * 14);
+  color: var(--text);
+  background-color: var(--bg);
+  width: fit-content;
+  min-width: 3em;
+  border-radius: calc(var(--1px) * 18);
+  filter: drop-shadow(0 0 1px currentColor);
+  font-weight: bold;
+}
+
+/* 蓝色半透明背景与 filter 不兼容 */
+.scene-blue .event--message .message {
+  filter: none;
+  padding: calc(var(--1px) * 6) calc(var(--1px) * 10);
+}
+
+/* 优化蓝色场景时的消息尺寸 */
+.scene-blue .event--message:not(.has-emotes):not(.guard-level--0) .message {
+  --margin-top: 4;
+  --margin-left: 30;
+
+  padding: calc(var(--1px) * 2) calc(var(--1px) * 8);
+  /* 当下方消息装饰开启时请取消注释 */
+  /* padding-right: calc(var(--1px) * 30); */
+  margin-bottom: calc(var(--1px) * 4);
+  border: calc(var(--1px) * 2) solid transparent;
+}
+
+.scene-blue .event--message:not(.has-emotes):not(.guard-level--0) .message::before {
+  /* 取消下列注释开启消息右侧装饰 */
+  /* content: '';
+  display: block;
+  position: absolute;
+  width: calc(var(--1px) * 24);
+  height: calc(var(--1px) * 24);
+  right: calc(var(--1px) * 4);
+  top: calc(var(--1px) * 2);
+  background-color: var(--text);
+  -wekbit-mask-image: var(--cross-deco);
+  mask-image: var(--cross-deco);
+  -webkit-mask-size: calc(var(--1px) * 24);
+  mask-size: calc(var(--1px) * 24);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat; */
+}
+
+.scene-blue .guard-badge-in-meta {
+  background-image: none;
+  background-color: var(--text);
+  -webkit-mask-image: var(--cross-deco);
+  mask-image: var(--cross-deco);
+  -webkit-mask-size: calc(var(--1px) * 24);
+  mask-size: calc(var(--1px) * 24);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* 通过伪类实现双层描边 */
+.scene-blue .event--message:not(.has-emotes):not(.guard-level--0) .message::after {
+  --offset: calc(var(--1px) * -6);
+  content: '';
+  display: block;
+  position: absolute;
+  top: var(--offset);
+  left: var(--offset);
+  right: var(--offset);
+  bottom: var(--offset);
+  border-radius: calc(var(--1px) * 22);
+  border: calc(var(--1px) * 2) solid var(--bg);
+}
+
+/* 去掉大表情消息边框 */
+.event--message.has-emotes .message {
+  background-color: transparent;
+  padding: 0;
+  filter: none;
+}
+
+/* 为聊天泡泡增加尾巴，半透明会导致箭头颜色叠加，因此不要应用于 [scene:blue] */
+.events-list-wrap:not(.scene-blue) .event--message:not(.has-emotes) .message::before {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: -5px;
+  left: -12px;
+  border: 10px solid transparent;
+  border-right: 18px solid var(--bg);
+  transform: rotate(40deg);
+}
+
+/* 放大表情尺寸 */
+.event--message .emote {
+  max-height: calc(var(--event-line-height) * 2);
+}
+
+/* 一个简易的渐变淡出效果，可以让组件边缘看起来没那么突兀 */
+.event-list {
+  --offset: 30px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1) var(--offset), rgba(0, 0, 0, 1));
+          mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1) var(--offset), rgba(0, 0, 0, 1));
+}
