@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>B站扫码登录</title>
-  <!-- 登录页完全内嵌在 .py 中，因此用户只需替换单个 Python 文件。 -->
   <style>
     :root { color-scheme: light; font-family: system-ui, "Microsoft YaHei", sans-serif; }
     * { box-sizing: border-box; }
@@ -62,7 +61,6 @@
     label { display: block; margin: 15px 0 6px; color: #475467; }
     .tip { margin-top: 18px; color: #7a8492; font-size: 13px; line-height: 1.65; }
   </style>
-  <!-- 固定版本的 qrcodejs 只负责把 B 站返回的登录 URL 绘制为二维码。 -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
