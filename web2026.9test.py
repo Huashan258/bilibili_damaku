@@ -89,7 +89,7 @@ OP_AUTH_REPLY = 8       # 服务端 -> 客户端：鉴权结果
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format="\033[95m%(asctime)s\033 \033[38;5;218m[%(levelname)s]\033 \033[38;2;255;215;0mLine:%(lineno)d\033 \033[33m%(funcName)s\033 \033[38;5;214m%(threadName)s\033 \033[38;5;141m华扇亲告诉你：\033[0m%(message)s",
 )
 logger = logging.getLogger("bilibili-danmaku")
 
